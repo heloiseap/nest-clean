@@ -66,7 +66,7 @@ describe('Fetch question comments e2e', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.body).toEqual({
-      comments: expect.arrayContaining([
+      resizeBy: expect.arrayContaining([
         expect.objectContaining({ content: 'Comment 01'}),
         expect.objectContaining({ content: 'Comment 02'})
       ])

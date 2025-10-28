@@ -53,22 +53,22 @@ describe('Fetch answer comments e2e', () => {
     })
 
     await Promise.all([
-        questionCommentFactory.makePrismaQuestionComment({
+        answerCommentFactory.makePrismaAnswerComment({
             authorId: user.id,
-            questionId: question.id,
+            answerId: answer.id,
             content: 'Comment 01'
         }),
-        questionCommentFactory.makePrismaQuestionComment({
+        answerCommentFactory.makePrismaAnswerComment({
             authorId: user.id,
-            questionId: question.id,
+            answerId: answer.id,
             content: 'Comment 02'
         })
     ])
 
-    const questionId = question.id.toString()
+    const answerId = answer.id.toString()
     
     const response = await request(app.getHttpServer())
-      .get(`/questions/${questionId}/comments`)
+      .get(`/anwers/${answerId}/comments`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send()
 

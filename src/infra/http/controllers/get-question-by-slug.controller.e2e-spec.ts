@@ -32,7 +32,7 @@ describe('Get question by slug e2e', () => {
     await app.init()
   })
 
-  test('[POST]/ questions/:slug', async () => {
+  test('[GET]/questions/:slug', async () => {
     const user = await studentFactory.makePrismaStudent()
     // const user = await prisma.user.create({
     //   data: {
