@@ -60,6 +60,7 @@ import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import { PrismaService } from '@/infra/database/prisma/prisma.service'
 import { StudentFactory } from 'test/factories/make-student'
+import { AttachmentFactory } from 'test/factories/make-attachment'
 import { DatabaseModule } from '@/infra/database/database.module'
 import { JwtService } from '@nestjs/jwt'
 
@@ -67,17 +68,19 @@ describe('Create question e2e', () => {
   let app: INestApplication
   let prisma: PrismaService
   let studentFactory: StudentFactory
+  let attachmentFactory: AttachmentFactory
   let jwt: JwtService
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule, DatabaseModule],
-      providers: [StudentFactory]
+      providers: [StudentFactory, AttachmentFactory]
     }).compile()
 
     app = moduleRef.createNestApplication()
     prisma = moduleRef.get(PrismaService)
     studentFactory = moduleRef.get(StudentFactory)
+    attachmentFactory = moduleRef.get(AttachmentFactory)
     jwt = moduleRef.get(JwtService)
 
     await app.init()
@@ -85,7 +88,7 @@ describe('Create question e2e', () => {
 
   // function generateTestToken(sub: string): string {
   //   const privateKey = Buffer.from(process.env.JWT_PRIVATE_KEY!, 'base64').toString('utf-8')
-    
+
   //   if (!privateKey) {
   //     throw new Error('JWT_PRIVATE_KEY is not defined in environment')
   //   }
@@ -101,7 +104,6 @@ describe('Create question e2e', () => {
   // }
 
   test('[POST]/ questions', async () => {
-    const user = await studentFactory.makePrismaStudent()
     // const user = await prisma.user.create({
     //   data: {
     //     name: 'John Doe',
@@ -111,7 +113,12 @@ describe('Create question e2e', () => {
     // })
 
     // const accessToken = generateTestToken(user.id)
-    const accessToken = jwt.sign({sub: user.id.toString()})
+    const user = await studentFactory.makePrismaStudent()
+  
+    const accessToken = jwt.sign({ sub: user.id.toString() })
+    
+    const attachment1 = await attachmentFactory.makePrismaAttachment()
+    const attachment2 = await attachmentFactory.makePrismaAttachment()
 
     const response = await request(app.getHttpServer())
       .post('/questions')
@@ -119,6 +126,10 @@ describe('Create question e2e', () => {
       .send({
         title: 'New Question',
         content: 'Question Content',
+        attachments: [
+          attachment1.id.toString(),
+          attachment2.id.toString()
+        ]
       })
 
     expect(response.statusCode).toBe(201)
@@ -130,5 +141,13 @@ describe('Create question e2e', () => {
     })
 
     expect(questionOnDataBase).toBeTruthy()
+
+    const attachmentsOnDataBase = await prisma.attachment.findMany({
+      where: {
+        questionId: questionOnDataBase?.id
+      }
+    })
+
+    expect(attachmentsOnDataBase).toHaveLength(2)
   })
 })
