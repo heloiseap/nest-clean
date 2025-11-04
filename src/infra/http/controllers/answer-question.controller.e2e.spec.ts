@@ -8,24 +8,27 @@ import { StudentFactory } from 'test/factories/make-student'
 import { DatabaseModule } from '@/infra/database/database.module'
 import { JwtService } from '@nestjs/jwt'
 import { QuestionFactory } from 'test/factories/make-question'
+import { AttachmentFactory } from 'test/factories/make-attachment'
 
 describe('Answer question e2e', () => {
   let app: INestApplication
   let studentFactory: StudentFactory
   let questionFactory: QuestionFactory
+  let attachmentFactory: AttachmentFactory
   let prisma: PrismaService
   let jwt: JwtService
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule, DatabaseModule],
-      providers: [StudentFactory, QuestionFactory]
+      providers: [StudentFactory, QuestionFactory, AttachmentFactory]
     }).compile()
 
     app = moduleRef.createNestApplication()
 
     studentFactory = moduleRef.get(StudentFactory)
     questionFactory = moduleRef.get(QuestionFactory)
+    attachmentFactory = moduleRef.get(AttachmentFactory)
     prisma = moduleRef.get(PrismaService)
     jwt = moduleRef.get(JwtService)
 
@@ -43,11 +46,18 @@ describe('Answer question e2e', () => {
 
     const questionId = question.id.toString()
 
+    const attachment1 = await attachmentFactory.makePrismaAttachment()
+    const attachment2 = await attachmentFactory.makePrismaAttachment()
+
     const response = await request(app.getHttpServer())
       .post(`/questions/${questionId}/answers`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         content: 'New Answer',
+        attachments: [
+          attachment1.id.toString(),
+          attachment2.id.toString()
+        ]
       })
 
     expect(response.statusCode).toBe(201)
@@ -59,5 +69,13 @@ describe('Answer question e2e', () => {
     })
 
     expect(answerOnDataBase).toBeTruthy()
+
+    const attachmentsOnDataBase = await prisma.attachment.findMany({
+      where: {
+        answerId: answerOnDataBase?.id
+      }
+    })
+
+    expect(attachmentsOnDataBase).toHaveLength(2)
   })
 })

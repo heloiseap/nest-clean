@@ -45,11 +45,11 @@ export class InMemoryAnswersRepository implements AnswersRepository {
     this.items[itemIndex] = answer
 
     await this.answerAttachmentsRepository.createMany(
-      answer .attachments.getNewItems()
+      answer.attachments.getNewItems()
     )
 
     await this.answerAttachmentsRepository.deleteMany(
-      answer .attachments.getRemovedItems()
+      answer.attachments.getRemovedItems()
     )
 
     DomainEvents.dispatchEventsForAggregate(answer.id)

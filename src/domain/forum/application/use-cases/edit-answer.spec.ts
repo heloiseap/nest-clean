@@ -110,7 +110,7 @@ describe('Edit Answer', () => {
     )
 
     const result = await sut.execute({
-      answerId: newAnswer.id.toValue(),
+      answerId: newAnswer.id.toString(),
       authorId: 'author-1',
       content: 'Conteúdo teste',
       attachmentsIds: ['1', '3'],
