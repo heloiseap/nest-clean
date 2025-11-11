@@ -39,34 +39,36 @@ describe('Fetch answer comments e2e', () => {
   })
 
   test('[GET] /answers/:answerId/comments', async () => {
-    const user = await studentFactory.makePrismaStudent()
-    
-    const accessToken = jwt.sign({sub: user.id.toString()})
+    const user = await studentFactory.makePrismaStudent({
+      name: 'John Doe'
+    })
+
+    const accessToken = jwt.sign({ sub: user.id.toString() })
 
     const question = await questionFactory.makePrismaQuestion({
-        authorId: user.id,
+      authorId: user.id,
     })
 
     const answer = await answerFactory.makePrismaAnswer({
-        questionId: question.id,
-        authorId: user.id
+      questionId: question.id,
+      authorId: user.id
     })
 
     await Promise.all([
-        answerCommentFactory.makePrismaAnswerComment({
-            authorId: user.id,
-            answerId: answer.id,
-            content: 'Comment 01'
-        }),
-        answerCommentFactory.makePrismaAnswerComment({
-            authorId: user.id,
-            answerId: answer.id,
-            content: 'Comment 02'
-        })
+      answerCommentFactory.makePrismaAnswerComment({
+        authorId: user.id,
+        answerId: answer.id,
+        content: 'Comment 01'
+      }),
+      answerCommentFactory.makePrismaAnswerComment({
+        authorId: user.id,
+        answerId: answer.id,
+        content: 'Comment 02'
+      })
     ])
 
     const answerId = answer.id.toString()
-    
+
     const response = await request(app.getHttpServer())
       .get(`/anwers/${answerId}/comments`)
       .set('Authorization', `Bearer ${accessToken}`)
@@ -75,8 +77,8 @@ describe('Fetch answer comments e2e', () => {
     expect(response.statusCode).toBe(200)
     expect(response.body).toEqual({
       comments: expect.arrayContaining([
-        expect.objectContaining({ content: 'Comment 01'}),
-        expect.objectContaining({ content: 'Comment 02'})
+        expect.objectContaining({ content: 'Comment 01', authorName: 'John Doe' }),
+        expect.objectContaining({ content: 'Comment 02', authorName: 'John Doe' })
       ])
     })
   })

@@ -45,6 +45,9 @@ export class PrismaQuestionCommentsRepository implements QuestionCommentsReposit
             where: {
                 questionId
             },
+            include: {
+                author: true
+            },
             orderBy: {
                 createdAt: 'desc'
             },
